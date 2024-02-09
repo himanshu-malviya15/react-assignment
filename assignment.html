@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assignment</title>
+    <style>
+      body {
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      #promotionElement {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        display: none;
+      }
+
+      #myMediaElement {
+        top: 0;
+        left: 0;
+        position: relative;
+        z-index: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Video or Audio Element with an ID -->
+    <video id="myMediaElement" width="640" height="360" controls>
+      <source src="./video.mp4" type="video/mp4" />
+      Your browser does not support the video tag.
+    </video>
+
+    <!-- Promotional Video Element -->
+    <video
+      id="promotionElement"
+      width="640"
+      height="360"
+      controls
+      style="display: none"
+    >
+      <source src="./promotion.mp4" type="video/mp4" />
+    </video>
+
+    <script>
+      // Function to handle time-based promotions
+      function handlePromotions(timePositions, promotionalContent) {
+        let currentPromotionIndex = 0;
+        let promotionShown = false; // Flag to check if promotion has been shown
+
+        // Event listener for time updates during playback
+        function updateTimeHandler(event) {
+          const currentTime = event.target.currentTime;
+
+          // Check if the current time matches a specified promotion time
+          if (
+            timePositions.includes(Math.floor(currentTime)) &&
+            !promotionShown
+          ) {
+            showPromotion(promotionalContent[currentPromotionIndex]);
+            currentPromotionIndex++;
+            promotionShown = true; // Set the flag to true to prevent repeated promotions
+          } else if (
+            !timePositions.includes(Math.floor(currentTime)) &&
+            promotionShown
+          ) {
+            promotionShown = false; // Reset the flag if the time position changes
+          }
+        }
+
+        // Event listener for media playback end
+        function mediaEndedHandler() {
+          // Reset promotion index and flag when media playback ends
+          currentPromotionIndex = 0;
+          promotionShown = false;
+        }
+
+        // Function to display promotions
+        function showPromotion(content) {
+          // Create a new video element for the promotional content
+          const promotionElement = document.getElementById("promotionElement");
+          promotionElement.src = "./promotion.mp4";
+          promotionElement.style.display = "block";
+          promotionElement.play();
+
+          // Pause the main media element during the promotion
+          const mainMediaElement = document.getElementById("myMediaElement");
+          mainMediaElement.pause();
+
+          // Event listener to hide the promotional video when it ends
+          promotionElement.addEventListener("ended", function () {
+            promotionElement.style.display = "none";
+            mainMediaElement.play(); // Resume the main media playback
+          });
+        }
+
+        return { updateTimeHandler, mediaEndedHandler };
+      }
+
+      // IIFE script to include the above function in the main app
+      (function () {
+        const timePositions = [5, 15, 30]; // Example time positions in seconds
+        const promotionalContent = ["1"]; // Example promotional content
+
+        const promotionHandlers = handlePromotions(
+          timePositions,
+          promotionalContent
+        );
+
+        // Example video or audio element
+        const mediaElement = document.getElementById("myMediaElement");
+        mediaElement.addEventListener(
+          "timeupdate",
+          promotionHandlers.updateTimeHandler
+        );
+        mediaElement.addEventListener(
+          "ended",
+          promotionHandlers.mediaEndedHandler
+        );
+
+        // You can now use the mediaElement to control playback and handle promotions
+      })();
+    </script>
+  </body>
+</html>
